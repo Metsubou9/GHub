@@ -23,17 +23,25 @@ if (Test-Path -LiteralPath $buildDir) {
 }
 New-Item -ItemType Directory -Path $buildDir | Out-Null
 
-& dotnet new console -n cputemp_build -o $buildDir --no-restore | Out-Null
+& dotnet new console -n cputemp_build -o $buildDir -f net8.0 --no-restore | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "dotnet new failed" }
-& dotnet add "$buildDir/cputemp_build.csproj" package LibreHardwareMonitorLib | Out-Null
+& dotnet add "$buildDir/cputemp_build.csproj" package LibreHardwareMonitorLib --version 0.9.5 | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "dotnet add LibreHardwareMonitorLib failed" }
-& dotnet add "$buildDir/cputemp_build.csproj" package System.ServiceProcess.ServiceController | Out-Null
+& dotnet add "$buildDir/cputemp_build.csproj" package System.ServiceProcess.ServiceController --version 8.0.0 | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "dotnet add ServiceController failed" }
 
 Copy-Item -LiteralPath (Join-Path $root "tools/cputemp.cs") -Destination (Join-Path $buildDir "Program.cs") -Force
 
-& dotnet publish "$buildDir/cputemp_build.csproj" -c Release -o (Join-Path $root "tools")
+& dotnet publish "$buildDir/cputemp_build.csproj" -c Release -p:AssemblyName=cputemp -o (Join-Path $root "tools")
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
+
+foreach ($need in @("cputemp.exe", "LibreHardwareMonitorLib.dll")) {
+  if (-not (Test-Path -LiteralPath (Join-Path $root "tools/$need"))) {
+    Write-Host "Содержимое tools/ после publish:"
+    Get-ChildItem -LiteralPath (Join-Path $root "tools") -File | ForEach-Object { Write-Host ("  " + $_.Name) }
+    throw "Нет tools/$need после сборки cputemp"
+  }
+}
 
 Remove-Item -LiteralPath $buildDir -Recurse -Force
 

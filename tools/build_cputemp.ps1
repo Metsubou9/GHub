@@ -1,4 +1,4 @@
-# Сборка tools/cputemp.exe (температура CPU через LibreHardwareMonitor).
+﻿# Сборка tools/cputemp.exe (температура CPU через LibreHardwareMonitor).
 # Запуск из корня проекта:
 #   powershell -ExecutionPolicy Bypass -File tools/build_cputemp.ps1
 # Требует установленный .NET SDK (dotnet --version).

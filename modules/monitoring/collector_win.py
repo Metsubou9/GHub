@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import threading
 import time
 
@@ -25,9 +26,16 @@ def _nv_handle():
 
 
 def _helper_path() -> str | None:
+    cands = [os.path.join(os.getcwd(), "tools", "cputemp.exe")]
+    if getattr(sys, "frozen", False):  # GHub.exe: ищем рядом с exe, не только в cwd
+        exe_dir = os.path.dirname(sys.executable)
+        cands.append(os.path.join(exe_dir, "tools", "cputemp.exe"))
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            cands.append(os.path.join(meipass, "tools", "cputemp.exe"))
     base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    for cand in (os.path.join(os.getcwd(), "tools", "cputemp.exe"),
-                 os.path.join(base, "tools", "cputemp.exe")):
+    cands.append(os.path.join(base, "tools", "cputemp.exe"))
+    for cand in cands:
         if os.path.exists(cand):
             return cand
     return None

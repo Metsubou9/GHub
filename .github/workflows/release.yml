@@ -1,0 +1,35 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build portable zip (GHub.exe + PresentMon + cputemp)
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File build_release.ps1
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${{ github.ref_name }}"
+          dist/GHub-*-portable.zip
+          --title "${{ github.ref_name }}"
+          --notes "Portable: распаковать zip и запустить GHub.exe от администратора (иначе нет FPS и температуры CPU)."

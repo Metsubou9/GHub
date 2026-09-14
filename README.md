@@ -15,7 +15,15 @@
 - Дашборд в браузере (`http://127.0.0.1:8765`), история сессий в SQLite
 - Работает в degraded mode: без админа/бинарников показывает `--` вместо метрик
 
-## Быстрый старт
+## Установка (пользователям)
+
+1. Скачай `GHub-vX.Y-portable.zip` из раздела [Releases](https://github.com/Metsubou9/GHub/releases).
+2. Распакуй в любую папку.
+3. Запусти `GHub.exe` **от администратора** — без админа не будет FPS и температуры CPU.
+
+В архиве уже всё для всех метрик: PresentMon (FPS), `tools/cputemp.exe` (темп CPU), конфиги. Python ставить не нужно.
+
+## Быстрый старт (разработка)
 
 ```powershell
 # 1. Python 3.10+, затем:
@@ -44,6 +52,16 @@ python main.py
 ```powershell
 powershell -ExecutionPolicy Bypass -File build_exe.ps1
 # Результат: dist/GHub.exe (+ presentmon.exe и config рядом, если они были)
+```
+
+## Релиз для пользователей
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build_release.ps1
+# Результат: dist/GHub-vX.Y-portable.zip - всё внутри, см. "Установка"
+# Или через GitHub Actions: подними VERSION в main.py, затем
+git tag v0.17; git push origin v0.17
+# - workflow .github/workflows/release.yml сам соберёт и выложит zip в Releases
 ```
 
 ## Конфигурация

@@ -5,6 +5,7 @@ PresentMon на время захвата и не читается другим 
 
 import os
 import subprocess
+import sys
 import threading
 import time
 from collections import deque
@@ -47,9 +48,16 @@ class FpsTracker:
         return self._status
 
     def _exe(self) -> str | None:
+        cands = [os.path.join(os.getcwd(), "presentmon.exe")]
+        if getattr(sys, "frozen", False):  # GHub.exe: ищем рядом с exe, не только в cwd
+            exe_dir = os.path.dirname(sys.executable)
+            cands.append(os.path.join(exe_dir, "presentmon.exe"))
+            meipass = getattr(sys, "_MEIPASS", None)
+            if meipass:
+                cands.append(os.path.join(meipass, "presentmon.exe"))
         base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        for cand in (os.path.join(os.getcwd(), "presentmon.exe"),
-                     os.path.join(base, "presentmon.exe")):
+        cands.append(os.path.join(base, "presentmon.exe"))
+        for cand in cands:
             if os.path.exists(cand):
                 return cand
         return None

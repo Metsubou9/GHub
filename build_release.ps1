@@ -31,10 +31,11 @@ if ($needDl) {
   if ($h -ne $PRESENTMON_SHA256) { throw "sha256 PresentMon не сошелся: $h" }
 }
 
-# 2. Хелпер темп CPU. Нет - собрать из исходника (нужен dotnet).
+# 2. Хелпер темп CPU. Нет - собрать из исходника (нужен dotnet SDK).
 if (-not (Test-Path -LiteralPath (Join-Path $root "tools/cputemp.exe"))) {
   Write-Host "Собираю tools/cputemp.exe..."
-  powershell -ExecutionPolicy Bypass -File (Join-Path $root "tools/build_cputemp.ps1")
+  & powershell -ExecutionPolicy Bypass -File (Join-Path $root "tools/build_cputemp.ps1")
+  if ($LASTEXITCODE -ne 0) { throw "tools/build_cputemp.ps1 failed" }
 }
 if (-not (Test-Path -LiteralPath (Join-Path $root "tools/LibreHardwareMonitorLib.dll"))) {
   throw "Нет tools/LibreHardwareMonitorLib.dll после сборки cputemp"
@@ -42,10 +43,12 @@ if (-not (Test-Path -LiteralPath (Join-Path $root "tools/LibreHardwareMonitorLib
 
 # 3. Сам GHub.exe
 pip install -r requirements.txt
+if ($LASTEXITCODE -ne 0) { throw "pip install failed" }
 python -m PyInstaller --noconfirm --onefile --windowed --name GHub `
   --add-data "config;config" --add-data "dashboard;dashboard" `
   --add-data "core/schema.sql;core" --add-data "tools;tools" `
   main.py
+if ($LASTEXITCODE -ne 0) { throw "PyInstaller build failed" }
 
 # 4. Portable-папка
 $port = Join-Path $root "dist/GHub-portable"

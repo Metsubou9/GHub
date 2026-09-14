@@ -48,7 +48,7 @@ python main.py
 | Что | Куда положить | Где взять |
 |---|---|---|
 | `presentmon.exe` (FPS) | корень проекта | [PresentMon Releases](https://github.com/GameTechDev/PresentMon) |
-| `tools/cputemp.exe` + `LibreHardwareMonitorLib.dll` (темп CPU) | `tools/` | `powershell -ExecutionPolicy Bypass -File tools/build_cputemp.ps1` |
+| `tools/cputemp.exe` (темп CPU, self-contained — .NET на машине не нужен) | `tools/` | `powershell -ExecutionPolicy Bypass -File tools/build_cputemp.ps1` |
 | `thirdparty/PawnIO_setup.exe` (опционально) | `thirdparty/` | сайт вендора |
 
 Требуют запуск от администратора (ETW для FPS, драйвер для сенсоров CPU).

@@ -37,8 +37,8 @@ if (-not (Test-Path -LiteralPath (Join-Path $root "tools/cputemp.exe"))) {
   & powershell -ExecutionPolicy Bypass -File (Join-Path $root "tools/build_cputemp.ps1")
   if ($LASTEXITCODE -ne 0) { throw "tools/build_cputemp.ps1 failed" }
 }
-if (-not (Test-Path -LiteralPath (Join-Path $root "tools/LibreHardwareMonitorLib.dll"))) {
-  throw "Нет tools/LibreHardwareMonitorLib.dll после сборки cputemp"
+if (-not (Test-Path -LiteralPath (Join-Path $root "tools/cputemp.exe"))) {
+  throw "Нет tools/cputemp.exe после сборки (см. tools/build_cputemp.ps1)"
 }
 
 # 3. Сам GHub.exe

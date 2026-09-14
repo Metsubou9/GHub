@@ -1,0 +1,49 @@
+# Build artifacts
+build/
+dist/
+.cputemp_build/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local runtime
+data.sqlite
+*.log
+*.pid
+
+# Local config overrides (keep config/ in repo)
+config/*.local.yaml
+
+# External binaries (not stored in repo, see README "Внешние бинарники").
+# App works without them in degraded mode (no FPS / no CPU temp).
+presentmon.exe
+tools/*.exe
+tools/*.dll
+tools/*.pdb
+thirdparty/*.exe
+thirdparty/*.dll
+thirdparty/*.pdb
+
+# PyInstaller cache
+*.manifest
+*.dylib

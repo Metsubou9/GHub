@@ -1,0 +1,20 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<title>GHub dashboard</title>
+<style>body{font-family:Consolas,monospace;background:#111;color:#0f0;padding:20px}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #333;padding:4px 8px;font-size:13px}
+a{color:#0f0}</style></head><body>
+<h2>GHub - история сессий</h2>
+<p>Открой <code>data.sqlite</code> через DB Browser или выполни:<br>
+<code>sqlite3 data.sqlite "SELECT * FROM samples ORDER BY id DESC LIMIT 20;"</code></p>
+<p>Полный Web-дашборд с графиками - следующий шаг после стабилизации collector.</p>
+<p>CSV для отчета: <code>sqlite3 -header -csv data.sqlite "SELECT * FROM samples;" > report.csv</code></p>
+<h3>FAQ</h3>
+<p><b>FPS -- (нужен запуск от админа):</b> запусти терминал от администратора, PresentMon требует прав для ETW-сессии.</p>
+<p><b>Оверлея не видно в полноэкранном режиме:</b> так и должно быть - эксклюзивный fullscreen обходит DWM, поверх него не рисует никто кроме игры.
+Переключи игру в Borderless/Windowed (в osu!: Настройки - Экран - Borderless), либо смотри цифры после катки в data.sqlite.</p>
+<p><b>Профили singleplayer / multiplayer:</b> одиночные игры и osu! - профиль singleplayer (FPS + FRAME без пинга),
+Dota 2 и Deadlock - multiplayer (FPS + пинг сервера катки, в лобби - fallback).
+Новая игра добавляется 3 строками в games.yaml: name + processes + profile.</p>
+<p><b>Игры нет в конфиге:</b> если включен track_unknown, хаб следит за активным окном и пишет сессию как `? имя` с профилем unknown_profile.
+Системные процессы из unknown_ignore игнорируются.</p>
+</body></html>

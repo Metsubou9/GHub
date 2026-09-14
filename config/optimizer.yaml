@@ -1,0 +1,13 @@
+profiles:
+  default: {}
+  performance:
+    priority: "high"
+    affinity: [2,3,4,5,6,7,8,9,10,11]
+    kill_junk: false
+    game_mode: false
+  aggressive:
+    priority: "realtime"
+    affinity: [4,5,6,7,8,9,10,11]
+    kill_junk: true
+    kill_list: ["discord.exe", "chrome.exe", "update.exe"]
+    game_mode: true

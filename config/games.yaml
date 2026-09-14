@@ -1,0 +1,41 @@
+# GHub: 2 больших профиля + игры ссылаются на них.
+# singleplayer: FPS + FRAME (задержка кадра как в счетчике osu!), без пинга
+# multiplayer: FPS + PING до сервера текущей катки (автопоиск IP),
+#              пока катки нет - fallback ping_hosts (lobby)
+# Новая игра = 3 строки: name + processes + profile. Код менять не надо.
+defaults:
+  sample_interval_ms: 1000
+  ping_interval_ms: 2000
+  match_scan_interval_ms: 10000
+  dashboard_port: 8765
+  # неизвестные игры (нет в списке ниже): следить по активному окну,
+  # писать сессию как "? имя" с профилем unknown_profile
+  track_unknown: true
+  unknown_profile: singleplayer
+  unknown_ignore: ["explorer.exe", "ApplicationFrameHost.exe",
+    "SystemSettings.exe", "TextInputHost.exe", "SearchHost.exe",
+    "GHub.exe", "GHub_dbg.exe", "presentmon.exe",
+    "python.exe", "pythonw.exe"]
+
+profiles:
+  singleplayer:
+    net: "off"
+    frame_ms: true
+  multiplayer:
+    net: "match"
+    frame_ms: false
+    ping_hosts: ["146.66.155.0", "8.8.8.8"]
+
+games:
+  - name: "Deadlock"
+    processes: ["deadlock.exe"]
+    profile: "multiplayer"
+  - name: "Dota 2"
+    processes: ["dota2.exe"]
+    profile: "multiplayer"
+  - name: "osu!"
+    processes: ["osu!.exe"]
+    profile: "singleplayer"
+  - name: "Cyberpunk 2077"
+    processes: ["Cyberpunk2077.exe"]
+    profile: "singleplayer"

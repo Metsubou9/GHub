@@ -1,0 +1,180 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<title>GHub dashboard</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--txt:#c9d1d9;--acc:#39d353}
+body{font-family:Consolas,Menlo,monospace;background:var(--bg);color:var(--txt);
+     padding:20px;max-width:1100px;margin:auto}
+select,button{background:var(--panel);color:var(--acc);border:1px solid var(--line);
+              padding:6px 10px;font:inherit;border-radius:6px}
+button{cursor:pointer}button:hover{border-color:var(--acc)}
+a{color:var(--acc)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+      padding:12px 14px;margin:14px 0}
+.card h3{margin:0 0 6px;font-size:14px}
+canvas{width:100%;height:200px;display:block;cursor:crosshair}
+.legend{font-size:12px;color:#8b949e}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#tip{position:fixed;display:none;background:#000;border:1px solid var(--acc);
+     border-radius:6px;padding:6px 9px;font-size:12px;pointer-events:none;
+     white-space:pre;z-index:10}
+.dot{font-weight:bold}
+</style></head><body>
+<h2>GHub - история сессий</h2>
+<div class="row">
+<select id="sess"></select>
+<button onclick="load(true)">Обновить</button>
+<a id="csv" href="#">Скачать CSV</a>
+</div>
+<div class="card"><h3>FPS</h3><canvas id="c_fps" width="1000" height="200"></canvas><div class="legend" id="l_fps"></div></div>
+<div class="card" id="card_ping"><h3>Ping, ms</h3><canvas id="c_ping" width="1000" height="200"></canvas><div class="legend" id="l_ping"></div></div>
+<div class="card" id="card_frame"><h3>Frame, ms</h3><canvas id="c_frame" width="1000" height="200"></canvas><div class="legend" id="l_frame"></div></div>
+<div class="card"><h3>CPU / GPU / RAM (VRAM - правая шкала)</h3><canvas id="c_sys" width="1000" height="200"></canvas><div class="legend" id="l_sys"></div></div>
+<div id="tip"></div>
+<script>
+const $=id=>document.getElementById(id);
+const COLS=['#39d353','#ffab70','#79c0ff','#d2a8ff','#ffa657','#7ee787'];
+const charts={};
+async function api(p){return (await fetch(p)).json()}
+// локальное время из ISO (в базе UTC)
+const fmtT=t=>{try{return new Date(t).toLocaleTimeString('ru-RU',{hour12:false});}catch(e){return String(t).slice(11,19);}};
+const fmtD=t=>{try{return new Date(t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});}catch(e){return String(t).slice(0,16);}};
+
+function prep(cardId,canvasId,legId,series,labels){
+  const has=series.some(s=>s.data.some(v=>v!=null));
+  if(cardId)$(cardId).style.display=has?'':'none';
+  charts[canvasId]={c:$(canvasId),series,labels};
+  if(!has){ // пустую карточку тоже чистим, чтобы не висел старый график
+    const x=$(canvasId).getContext('2d');
+    x.clearRect(0,0,$(canvasId).width,$(canvasId).height);
+    x.fillStyle='#8b949e';x.font='12px Consolas';x.fillText('нет данных',20,30);
+    $(legId).innerHTML='';
+    return;
+  }
+  const c=$(canvasId);
+  charts[canvasId]={c,series,labels};
+  const leg=$(legId);leg.innerHTML='';
+  series.forEach((s,i)=>{
+    const v=s.data.filter(v=>v!=null);if(!v.length)return;
+    const avg=v.reduce((a,b)=>a+b,0)/v.length;
+    leg.innerHTML+=`<span class="dot" style="color:${COLS[i%COLS.length]}">■</span> `+
+      `${s.name}${s.axis==='r'?' (пр.шк.)':''}: avg ${avg.toFixed(1)} min ${Math.min(...v).toFixed(1)} max ${Math.max(...v).toFixed(1)} &nbsp; `;
+  });
+  draw(canvasId,-1);
+}
+
+function scale(vals,W,H,PT,PB,PL,PR,right){
+  const all=vals.filter(v=>v!=null);
+  let mn=Math.min(...all),mx=Math.max(...all);
+  if(mx-mn<1e-9){mn-=1;mx+=1;}
+  const pad=(mx-mn)*0.1;mn-=pad;mx+=pad;
+  return {mn,mx,Y:v=>PT+(1-(v-mn)/(mx-mn))*(H-PT-PB),right};
+}
+
+function draw(canvasId,hover){
+  const {c,series,labels}=charts[canvasId];
+  const x=c.getContext('2d'),W=c.width,H=c.height,PT=10,PB=20,PL=46,PR=46;
+  x.clearRect(0,0,W,H);
+  x.font='10px Consolas';
+  const n=series[0].data.length;
+  const X=i=>PL+(n<=1?0.5:i/(n-1))*(W-PL-PR);
+  const left=series.filter(s=>s.axis!=='r'),right=series.filter(s=>s.axis==='r');
+  const scL=left.length?scale(left.flatMap(s=>s.data),W,H,PT,PB,PL,PR,false):null;
+  const scR=right.length?scale(right.flatMap(s=>s.data),W,H,PT,PB,PL,PR,true):null;
+  const grid=(sc,align)=>{
+    x.strokeStyle='#21262d';x.fillStyle='#8b949e';
+    for(let g=0;g<=4;g++){
+      const v=sc.mn+(sc.mx-sc.mn)*g/4,py=sc.Y(v);
+      x.beginPath();x.moveTo(PL,py);x.lineTo(W-PR,py);x.stroke();
+      x.fillText(v.toFixed(v>=100?0:1),sc.right?W-PR+2:2,py-2);
+    }
+  };
+  if(scL)grid(scL);if(scR)grid(scR);
+  for(let k=0;k<3;k++){ // подписи времени (локальные)
+    const i=Math.round((n-1)*k/2);
+    if(labels[i]){x.fillStyle='#8b949e';x.fillText(fmtT(labels[i]),X(i)-24,H-6);}
+  }
+  series.forEach((s,si)=>{
+    const sc=s.axis==='r'?scR:scL;if(!sc)return;
+    x.strokeStyle=COLS[si%COLS.length];x.lineWidth=1.5;x.beginPath();
+    let started=false;
+    s.data.forEach((v,i)=>{
+      if(v==null){started=false;return;}
+      started?x.lineTo(X(i),sc.Y(v)):x.moveTo(X(i),sc.Y(v));started=true;
+    });
+    x.stroke();x.lineWidth=1;
+  });
+  if(hover>=0&&hover<n){
+    const px=X(hover);
+    x.strokeStyle='#8b949e';x.setLineDash([4,4]);
+    x.beginPath();x.moveTo(px,PT);x.lineTo(px,H-PB);x.stroke();x.setLineDash([]);
+    series.forEach((s,si)=>{
+      const v=s.data[hover];if(v==null)return;
+      const sc=s.axis==='r'?scR:scL;
+      x.fillStyle=COLS[si%COLS.length];
+      x.beginPath();x.arc(px,sc.Y(v),3.5,0,7);x.fill();
+    });
+  }
+}
+
+function bindHover(canvasId){
+  const c=$(canvasId),tip=$('tip');
+  c.onmousemove=e=>{
+    const st=charts[canvasId];if(!st)return;
+    const r=c.getBoundingClientRect();
+    const px=(e.clientX-r.left)*(c.width/r.width);
+    const n=st.series[0].data.length;
+    const i=Math.round((px-46)/(c.width-92)*(n-1));
+    if(i<0||i>=n)return;
+    draw(canvasId,i);
+    let t=fmtT(st.labels[i])+'\n';
+    st.series.forEach(s=>{
+      const v=s.data[i];
+      t+=`${s.name}: ${v==null?'--':(+v).toFixed(1)}\n`;
+    });
+    tip.textContent=t;
+    tip.style.display='block';
+    tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';
+  };
+  c.onmouseleave=()=>{tip.style.display='none';draw(canvasId,-1);};
+}
+['c_fps','c_ping','c_frame','c_sys'].forEach(bindHover);
+
+const col=k=>window._d.map(r=>r[k]);
+const ts=()=>window._d.map(r=>r.ts);
+
+async function loadSessions(){
+  const ss=await api('/api/sessions');
+  const sel=$('sess');sel.innerHTML='';
+  ss.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.id;o.textContent=`#${s.id} ${s.game} (${s.n}) ${fmtD(s.started_at)}`;
+    sel.appendChild(o);
+  });
+  if(ss.length)load();
+}
+async function load(){
+  const id=$('sess').value;if(!id)return;
+  $('csv').href='/export.csv?session_id='+id;
+  window._d=await api('/api/samples?session_id='+id);
+  const T=ts();
+  prep('card_ping','c_ping','l_ping',[{name:'ping ms',data:col('ping_ms')}],T);
+  prep('card_frame','c_frame','l_frame',[{name:'frame ms',data:col('frame_ms')}],T);
+  prep('','c_fps','l_fps',[{name:'fps',data:col('fps')}],T);
+  // sys-карточка всегда видна: пустые серии просто пропускаются в легенде
+  $('c_sys').closest('.card').style.display='';
+  charts['c_sys']={c:$('c_sys'),series:[
+    {name:'cpu%',data:col('cpu_pct')},{name:'cpu C',data:col('cpu_temp')},
+    {name:'gpu%',data:col('gpu_pct')},{name:'gpu C',data:col('gpu_temp')},
+    {name:'ram%',data:col('ram_pct')},{name:'vram MB',data:col('vram_used_mb'),axis:'r'}],labels:T};
+  const leg=$('l_sys');leg.innerHTML='';
+  charts['c_sys'].series.forEach((s,i)=>{
+    const v=s.data.filter(v=>v!=null);if(!v.length)return;
+    const avg=v.reduce((a,b)=>a+b,0)/v.length;
+    leg.innerHTML+=`<span class="dot" style="color:${COLS[i%COLS.length]}">■</span> `+
+      `${s.name}${s.axis==='r'?' (пр.шк.)':''}: avg ${avg.toFixed(1)} &nbsp; `;
+  });
+  draw('c_sys',-1);
+}
+$('sess').onchange=()=>load();
+loadSessions();setInterval(()=>{if($('sess').value)load()},10000);
+</script></body></html>

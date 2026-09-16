@@ -8,7 +8,7 @@ import webbrowser
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from core.config_loader import load_games_config
+from core.config_loader import load_games_config, load_optimizer_config, save_games_config
 from modules.optimizer.profiles import get_optimizer
 from core.game_detector import entry_for, find_game, ping_hosts_for, settings_for
 from core.storage import connect, start_session, end_session, insert_sample
@@ -21,7 +21,6 @@ from ui.overlay import Overlay
 from ui.tray import TrayController
 from ui.input_window import create_input_window
 from dashboard.server import DashboardServer
-from tkinter import messagebox
 
 VERSION = "0.16"
 
@@ -47,6 +46,15 @@ def fmt(s: Sample, game: str | None, entry: dict | None,
     return " | ".join(parts)
 
 
+def notify(title: str, text: str) -> None:
+    """Потокобезопасное всплывающее уведомление Windows."""
+    try:
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(0, text, title, 0x40 | 0x10000)
+    except Exception:
+        print(f"[{title}] {text}")
+
+
 def main():
     cfg = load_games_config()
     interval = cfg.get("defaults", {}).get("sample_interval_ms", 1000) / 1000
@@ -67,7 +75,7 @@ def main():
     def select_prof(name):
         nonlocal current_opt_profile
         current_opt_profile = name
-        messagebox.showinfo("GHub", f"Выбран профиль оптимизатора: {name}")
+        notify("GHub", f"Выбран профиль оптимизатора: {name}")
         print(f"[optimizer] выбран профиль: {name}")
 
     def apply_now():
@@ -75,16 +83,20 @@ def main():
         game_name, proc_name = find_game(cfg)
         if game_name and proc_name:
             try:
-                opt_cfg_local = yaml.safe_load(open("config/optimizer.yaml")) if os.path.exists("config/optimizer.yaml") else {}
+                opt_cfg_local = load_optimizer_config()
                 profile = opt_cfg_local.get("profiles", {}).get(current_opt_profile, {})
                 if profile:
-                    optimizer.apply_profile(proc_name, profile)
-                    print(f"[optimizer] применено сейчас к {game_name} ({proc_name}): {current_opt_profile}")
-                    messagebox.showinfo("GHub", f"Применено к {game_name} ({proc_name})\nПрофиль: {current_opt_profile}")
+                    target_proc = proc_name.get("name", game_name) if isinstance(proc_name, dict) else proc_name
+                    optimizer.apply_profile(target_proc, profile)
+                    print(f"[optimizer] применено сейчас к {game_name} ({target_proc}): {current_opt_profile}")
+                    notify("GHub", f"Применено к {game_name} ({target_proc})\nПрофиль: {current_opt_profile}")
+                else:
+                    notify("GHub", f"Профиль '{current_opt_profile}' пуст или не найден в optimizer.yaml")
             except Exception as e:
                 print(f"[optimizer] ошибка: {e}")
+                notify("GHub", f"Ошибка применения оптимизации: {e}")
         else:
-            messagebox.showinfo("GHub", "Игра не найдена. Убедись, что игра запущена и есть в config/games.yaml")
+            notify("GHub", "Игра не найдена. Убедись, что игра запущена и есть в config/games.yaml")
             print("[optimizer] игра не найдена")
 
     def add_cfg():
@@ -94,18 +106,18 @@ def main():
             profile = "singleplayer"
             print(f"[add_config] добавляю {fg} с профилем {profile} (изменить можно в config/games.yaml)")
             try:
-                with open("config/games.yaml", "r") as f:
-                    cfg_y = yaml.safe_load(f)
+                cfg_y = load_games_config()
                 cfg_y.setdefault("games", [])
                 cfg_y["games"].append({"name": fg.replace(".exe", ""), "processes": [fg], "profile": profile})
-                with open("config/games.yaml", "w") as f:
-                    yaml.dump(cfg_y, f, allow_unicode=True, sort_keys=False)
+                save_games_config(cfg_y)
                 print(f"[add_config] готово: {fg} -> {profile}")
-                messagebox.showinfo("GHub", f"Процесс добавлен в config/games.yaml\n{fg} -> {profile}")
+                notify("GHub", f"Процесс добавлен в config/games.yaml\n{fg} -> {profile}")
             except Exception as e:
                 print(f"[add_config] ошибка записи: {e}")
+                notify("GHub", f"Ошибка сохранения конфига: {e}")
         else:
             print("[add_config] нет активного окна")
+            notify("GHub", "Нет активного окна для добавления в конфиг")
 
     tray = TrayController(
         on_toggle_overlay=overlay.toggle,
@@ -114,6 +126,7 @@ def main():
         on_select_profile=select_prof,
         on_apply_now=apply_now,
         on_add_config=add_cfg,
+        get_current_profile=lambda: current_opt_profile,
         on_quit=quit_event.set,
     )
     tray.start()
@@ -145,12 +158,12 @@ def main():
                     session_id = start_session(con, game, proc)
                     # Применяем профиль оптимизации при запуске игры
                     profile_name = current_opt_profile
-                    profiles_dict = (cfg.get("optimizer", {}).get("profiles", {})
-                                      or {}) if isinstance(cfg.get("optimizer", {}), dict) else {}
-                    profile = profiles_dict.get(profile_name, {})
-                    if profile and isinstance(profile, dict) and profile:
+                    opt_cfg = load_optimizer_config()
+                    profile = opt_cfg.get("profiles", {}).get(profile_name, {})
+                    if profile and isinstance(profile, dict):
                         try:
-                            optimizer.apply_profile(proc.get("name", game) if isinstance(proc, dict) else (proc or game), profile)
+                            target_proc = proc.get("name", game) if isinstance(proc, dict) else (proc or game)
+                            optimizer.apply_profile(target_proc, profile)
                             print(f"[{cur_game}] optimizer: {profile_name} -> priority={profile.get('priority')} affinity={profile.get('affinity')} kill_junk={profile.get('kill_junk')}")
                         except Exception as e:
                             print(f"[{cur_game}] optimizer error: {e}")

@@ -72,9 +72,22 @@ class OptimizerWin(IOptimizer):
 
     def _find_pid(self, name: str) -> int | None:
         try:
+            import psutil
+            name_low = name.lower()
+            for p in psutil.process_iter(["pid", "name"]):
+                try:
+                    if p.info["name"] and p.info["name"].lower() == name_low:
+                        return p.info["pid"]
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+        except Exception:
+            pass
+        # Fallback
+        try:
             out = subprocess.run(
                 ["tasklist", "/fi", f"imagename eq {name}", "/nh", "/fo", "csv"],
-                capture_output=True, text=True
+                capture_output=True, text=True, timeout=2,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
             for line in out.stdout.splitlines():
                 parts = line.split(",")

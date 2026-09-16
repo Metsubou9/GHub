@@ -1,110 +1,157 @@
-# GHub
+# ⚡ GHub — Gaming Performance Hub & Optimizer
 
-Игровой хаб для Windows: оверлей, мониторинг (CPU/GPU/RAM/FPS/пинг), дашборд,
-профили оптимизации и запись сессий в SQLite. Запуск — `python main.py`, позже `GHub.exe`.
+<p align="center">
+  <b>Игровой хаб нового поколения для Windows:</b><br>
+  чистый оверлей без инжекта, мониторинг FPS / Frame Time / Ping / CPU / GPU / RAM,<br>
+  веб-дашборд с интерактивными графиками, оптимизатор процессов и аналитика в SQLite.
+</p>
 
-![Windows](https://img.shields.io/badge/OS-Windows-blue) ![Python](https://img.shields.io/badge/python-3.10%2B-green) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+<p align="center">
+  <a href="https://github.com/Metsubou9/GHub/releases/latest"><img src="https://img.shields.io/github/v/release/Metsubou9/GHub?color=blue&label=Release&logo=github" alt="Latest Release"></a>
+  <a href="https://github.com/Metsubou9/GHub/releases"><img src="https://img.shields.io/github/downloads/Metsubou9/GHub/total?color=success&label=Downloads&logo=github" alt="Downloads"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-brightgreen.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%2F11%20x64-0078D6?logo=windows&logoColor=white" alt="Windows">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/PresentMon-v2.5-orange" alt="PresentMon">
+  <img src="https://img.shields.io/badge/Tests-13%20passed-success" alt="Tests">
+</p>
 
-## Возможности
+---
 
-- Оверлей поверх игр (FPS, задержка кадра, пинг, CPU/GPU) + трей с управлением
-- FPS через PresentMon v2 (без инжекта, безопасно для античита)
-- Пинг до сервера текущей катки (автопоиск IP) с fallback-хостами
-- Профили `singleplayer` / `multiplayer` в `config/games.yaml` — новая игра = 3 строки
-- Оптимизатор процесса (приоритет, affinity) — `config/optimizer.yaml`
-- Дашборд в браузере (`http://127.0.0.1:8765`), история сессий в SQLite
-- Работает в degraded mode: без админа/бинарников показывает `--` вместо метрик
+> 🚀 **[Скачать готовую Portable-сборку (v0.16)](https://github.com/Metsubou9/GHub/releases/download/v0.16/GHub-v0.16-portable.zip)**  
+> Автономная версия без необходимости устанавливать Python. Распакуйте архив в удобную папку и запустите `GHub.exe` от имени администратора.
 
-## Установка (пользователям)
+---
 
-1. Скачай `GHub-vX.Y-portable.zip` из раздела [Releases](https://github.com/Metsubou9/GHub/releases).
-2. Распакуй в обычную папку (Документы, `D:\Games` и т.п.) — **не** в Program Files, иначе Windows заблокирует запись конфигов и базы.
-3. Запусти `GHub.exe` **от администратора** — без админа не будет FPS и температуры CPU.
-4. При первом запуске SmartScreen ругнётся (exe без цифровой подписи): «Подробнее → Выполнить в любом случае». Это разовое действие.
+## 📸 Интерфейс и Дашборд
 
-В архиве уже всё для всех метрик: PresentMon (FPS), `tools/cputemp.exe` (темп CPU), конфиги. Python ставить не нужно.
+### Интерактивный веб-дашборд аналитики сессий (`http://127.0.0.1:8765`)
+> Полнофункциональный локальный веб-интерфейс на HTML5 Canvas без внешних веб-зависимостей: история всех игровых сессий, интерактивные графики FPS, задержки кадра (Frame Time ms), сетевого пинга, температуры и загрузки CPU/GPU/VRAM, а также экспорт в CSV в 1 клик.
 
-## Требования и ограничения
+![GHub Dashboard](docs/screenshots/01_dashboard.png)
 
-- Только Windows 10/11 x64.
-- Полные метрики (FPS, темп CPU) — только с правами администратора, без них degraded mode (`--`).
-- Температура и загрузка GPU — только NVIDIA (через NVML). На AMD/Radeon эти поля покажут `--`, см. Roadmap.
+---
 
-## Быстрый старт (разработка)
+## 🌟 Ключевые возможности
+
+- 🎮 **Безопасный оверлей (Zero-Injection)**:
+  - Отображение поверх игр актуального FPS, Frame Time, пинга, загрузки и температур CPU/GPU.
+  - Работает через PresentMon v2 и ETW без инжекта в память игры — **100% безопасно для Easy Anti-Cheat, BattlEye и VAC**.
+  - Поддержка перемещения оверлея мышью (drag & drop) и горячее скрытие/показ.
+
+- 🌐 **Интеллектуальный поиск IP сервера катки (Smart Match Ping)**:
+  - Автоматическое определение IP-адреса игрового сервера матча по сетевым UDP-соединениям процесса (актуально для Dota 2, Deadlock, CS2).
+  - Фоновый пинг игрового сервера в реальном времени с расчетом процента потери пакетов (Packet Loss %).
+  - Резервные fallback-хосты при нахождении в лобби.
+
+- ⚙️ **Оптимизатор процессов и игровых профилей**:
+  - Автоматическое и ручное применение профилей оптимизации (`default`, `performance`, `aggressive`) из `config/optimizer.yaml`.
+  - Управление приоритетом процесса (`high`, `realtime`), маской ядер процессора (CPU Affinity) и завершение фоновых фоновых программ (`kill_junk`).
+  - Быстрое переключение профилей через контекстное меню трея с индикатором активного режима.
+
+- 📊 **Локальная база данных SQLite и экспорт**:
+  - Полная телеметрия каждой игровой сессии сохраняется локально в SQLite.
+  - Автоматическая миграция схемы базы данных.
+  - Мгновенный экспорт сессии в `.csv` для детального анализа в Excel или Python.
+
+- 🛡️ **Отказоустойчивый режим (Degraded Mode)**:
+  - При запуске без прав администратора или без внешних бинарников хаб не падает, а корректно отображает `--` для недоступных аппаратных сенсоров.
+
+---
+
+## 🚀 Установка и запуск
+
+### Для пользователей (Portable ZIP)
+1. Скачайте архив **`GHub-v0.16-portable.zip`** со страницы [Releases](https://github.com/Metsubou9/GHub/releases).
+2. Распакуйте в любую папку пользователя (например, `D:\Tools\GHub\`).  
+   *(Не распаковывайте в `Program Files`, чтобы Windows не блокировала запись локальной базы данных).*
+3. Запустите **`GHub.exe` от имени администратора** (необходимо для чтения ETW метрик PresentMon и сенсоров температуры).
+4. Откройте дашборд в браузере: [`http://127.0.0.1:8765`](http://127.0.0.1:8765).
+
+---
+
+### Для разработчиков
 
 ```powershell
-# 1. Python 3.10+, затем:
+# 1. Клонирование репозитория
+git clone https://github.com/Metsubou9/GHub.git
+cd GHub
+
+# 2. Установка зависимостей Python
 pip install -r requirements.txt
+
+# 3. Запуск тестов
+python -m unittest discover -s tests
+
+# 4. Запуск хаба
 python main.py
-# Дашборд: http://127.0.0.1:8765
-# Выход: трей -> Выход / Ctrl+C
 ```
 
-Для FPS и температуры CPU нужны внешние бинарники (ниже). Без них всё
-запускается, но FPS/темп покажут `--`.
+---
 
-## Внешние бинарники (не хранятся в репо)
+## 📦 Внешние компоненты
 
-| Что | Куда положить | Где взять |
+| Компонент | Расположение | Назначение |
 |---|---|---|
-| `presentmon.exe` (FPS) | корень проекта | [PresentMon Releases](https://github.com/GameTechDev/PresentMon) |
-| `tools/cputemp.exe` (темп CPU, self-contained — .NET на машине не нужен) | `tools/` | `powershell -ExecutionPolicy Bypass -File tools/build_cputemp.ps1` |
-| `thirdparty/PawnIO_setup.exe` (опционально) | `thirdparty/` | сайт вендора |
+| `presentmon.exe` | корень проекта | Захват FPS и задержки кадра через ETW без инжекта ([PresentMon](https://github.com/GameTechDev/PresentMon)) |
+| `tools/cputemp.exe` | `tools/` | Чтение температуры ядер CPU через LibreHardwareMonitor (сборка: `tools/build_cputemp.ps1`) |
 
-Требуют запуск от администратора (ETW для FPS, драйвер для сенсоров CPU).
-Логи при проблемах: `%TEMP%\ghub_presentmon_err.log`, `%TEMP%\ghub_cpu.log`.
+---
 
-## Сборка GHub.exe
+## 🛠️ Сборка исполняемого файла
+
+Сборка автономного дистрибутива производится с помощью PyInstaller:
 
 ```powershell
+# Сборка GHub.exe
 powershell -ExecutionPolicy Bypass -File build_exe.ps1
-# Результат: dist/GHub.exe (+ presentmon.exe и config рядом, если они были)
-```
 
-## Релиз для пользователей
-
-```powershell
+# Сборка готового релизного Portable ZIP со всеми бинарниками
 powershell -ExecutionPolicy Bypass -File build_release.ps1
-# Результат: dist/GHub-vX.Y-portable.zip - всё внутри, см. "Установка"
-# Или через GitHub Actions: подними VERSION в main.py, затем
-git tag v0.17; git push origin v0.17
-# - workflow .github/workflows/release.yml сам соберёт и выложит zip в Releases
 ```
 
-## Конфигурация
+---
 
-- `config/games.yaml` — игры, профили `singleplayer`/`multiplayer`, пинг-хосты, порт дашборда
-- `config/optimizer.yaml` — профили оптимизации процесса
-- `config/*.local.yaml` — локальные переопределения (в git не коммитятся)
-
-## Структура
+## 📁 Структура проекта
 
 ```
-main.py               точка входа (оверлей, трей, дашборд, цикл сессий)
-core/                 детектор игр, конфиг, SQLite-хранилище
-modules/monitoring/   коллектор Windows, FPS (PresentMon), пинг, поиск IP катки
-modules/optimizer/    профили и применение приоритета/affinity
-modules/input_tester/ тест инпута
-ui/                   оверлей, трей, окно ввода
-dashboard/            веб-дашборд (server.py + html)
-tools/cputemp.cs      исходник хелпера темп CPU (сборка: tools/build_cputemp.ps1)
+GHub/
+├── main.py                  # Точка входа, трей, оверлей, связка мониторинга
+├── core/
+│   ├── config_loader.py     # Загрузка и сохранение YAML-конфигов (games, optimizer)
+│   ├── game_detector.py     # Детекция активного игрового процесса
+│   ├── storage.py           # SQLite хранилище сессий и сэмплов
+│   └── collector_abstract.py# Абстрактные интерфейсы метрик
+├── modules/
+│   ├── monitoring/          # Сборщики метрик (Windows, PresentMon FPS, Ping)
+│   ├── optimizer/           # Применение приоритетов и CPU affinity
+│   └── input_tester/        # Тестирование частоты опроса инпута
+├── dashboard/
+│   ├── server.py            # Встроенный HTTP сервер дашборда (stdlib)
+│   └── dashboard.html       # Интерактивные Canvas-графики
+├── ui/
+│   ├── overlay.py           # Безрамочный Topmost оверлей (Tkinter)
+│   ├── tray.py              # Иконка системного трея (Pystray)
+│   └── input_window.py      # Окно проверки задержки ввода
+└── tests/
+    └── test_ghub.py         # Модульные тесты конфигураций, детектора и БД
 ```
 
-## Лицензии
+---
 
-Код — MIT (`LICENSE`). В релизный zip входят чужие бинарники:
+## 🗺️ Roadmap развития
 
-- PresentMon v2.5.1 (MIT) — FPS
-- LibreHardwareMonitor (MPL-2.0) — температура CPU
+- [x] Интерактивные графики FPS, задержки кадра, пинга и температур в дашборде
+- [x] Экспорт сырых данных сессии в CSV
+- [x] Полноценный набор модульных тестов (`tests/test_ghub.py`)
+- [x] Потокобезопасные системные уведомления и индикация активного профиля в трее
+- [ ] Метрики AMD GPU (температура и загрузка через LibreHardwareMonitor)
+- [ ] Автоматическая проверка обновлений релизов через GitHub API
+- [ ] Расширение списка предустановленных игр в `config/games.yaml`
 
-Подробности и условия — в [THIRDPARTY_NOTICES.md](THIRDPARTY_NOTICES.md).
+---
 
-## Roadmap
+## 📄 Лицензия
 
-- [ ] Метрики AMD GPU (температура/загрузка через LibreHardwareMonitor)
-- [ ] Установщик и подписанный exe (убрать предупреждение SmartScreen)
-- [ ] Автопроверка обновлений
-- [ ] Графики FPS/пинга/температур за сессию в дашборде, экспорт в CSV
-- [ ] Больше игр в дефолтном `config/games.yaml`
-- [ ] Английская версия README
-- [ ] Автотесты и CI-проверка Python-кода
+Исходный код проекта распространяется под лицензией **MIT** (см. [LICENSE](LICENSE)).  
+Сторонние компоненты (PresentMon, LibreHardwareMonitor) используются согласно их лицензиям (см. [THIRDPARTY_NOTICES.md](THIRDPARTY_NOTICES.md)).

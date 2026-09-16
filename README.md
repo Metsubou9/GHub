@@ -18,7 +18,7 @@
 
 ---
 
-> 🚀 **[Скачать готовую Portable-сборку (v0.16)](https://github.com/Metsubou9/GHub/releases/download/v0.16/GHub-v0.16-portable.zip)**  
+> 🚀 **[Скачать готовую Portable-сборку (v0.17)](https://github.com/Metsubou9/GHub/releases/download/v0.17/GHub-v0.17-portable.zip)**  
 > Автономная версия без необходимости устанавливать Python. Распакуйте архив в удобную папку и запустите `GHub.exe` от имени администратора.
 
 ---
@@ -62,7 +62,7 @@
 ## 🚀 Установка и запуск
 
 ### Для пользователей (Portable ZIP)
-1. Скачайте архив **`GHub-v0.16-portable.zip`** со страницы [Releases](https://github.com/Metsubou9/GHub/releases).
+1. Скачайте архив **`GHub-v0.17-portable.zip`** со страницы [Releases](https://github.com/Metsubou9/GHub/releases).
 2. Распакуйте в любую папку пользователя (например, `D:\Tools\GHub\`).  
    *(Не распаковывайте в `Program Files`, чтобы Windows не блокировала запись локальной базы данных).*
 3. Запустите **`GHub.exe` от имени администратора** (необходимо для чтения ETW метрик PresentMon и сенсоров температуры).

@@ -22,7 +22,7 @@ from ui.tray import TrayController
 from ui.input_window import create_input_window
 from dashboard.server import DashboardServer
 
-VERSION = "0.16"
+VERSION = "0.17"
 
 
 def fmt(s: Sample, game: str | None, entry: dict | None,
